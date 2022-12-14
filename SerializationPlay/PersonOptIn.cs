@@ -12,13 +12,13 @@ namespace SerializationPlay
 {
 	//Tell it which class converter to use for this class
 	[JsonConverter(typeof(OptInClassConverter<PersonOptIn>))]
-	internal class PersonOptIn
+	internal class PersonOptIn 
 	{
 		public PersonOptIn()
 		{
 		}
 
-		public PersonOptIn(string personName, string address, string sSN, 
+		public PersonOptIn(string personName, string address, string sSN,
 			string otherId, string[] children)
 		{
 			PersonName=personName;

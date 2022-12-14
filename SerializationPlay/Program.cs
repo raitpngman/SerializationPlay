@@ -1,8 +1,20 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using SerializationPlay;
+using SerializationPlay.InterfacePlay;
 using System.Text.Json;
 
 Console.WriteLine("Hello, World!");
+
+var personTester = new PersonTester(4);
+var personTesterJson = JsonSerializer.Serialize<PersonTester>(personTester);
+Console.WriteLine(personTesterJson);
+var personTesterDeserialized = JsonSerializer.Deserialize<PersonTester>(personTesterJson);
+
+var personTesterB = new PersonTesterNoInterface(4);
+var personTesterJsonB = JsonSerializer.Serialize<PersonTesterNoInterface>(personTesterB);
+Console.WriteLine(personTesterJsonB);
+var personTesterDeserializedB = JsonSerializer.Deserialize<PersonTesterNoInterface>(personTesterJsonB);
+
 
 
 var personOptIn = new PersonOptIn("John Doe", "anywhere USA", "111-111-1111",

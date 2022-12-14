@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 
 namespace SerializationPlay
 {
@@ -21,40 +22,79 @@ namespace SerializationPlay
 									  Type typeToConvert,
 									  JsonSerializerOptions options)
 		{
-
-			
-
-			var name = reader.GetString();
-
-			var source = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(name, options);
-
 			var newClass = new C();
 
 			var classType = newClass.GetType();
+
 			var classProps = classType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-			foreach (var s in source.Keys)
+
+			//handle interface type.
+			JsonDocument jsonDoc;
+			if (reader.TokenType != JsonTokenType.String && JsonDocument.TryParseValue(ref reader, out jsonDoc))
 			{
-				var classProp = classProps.FirstOrDefault(x => x.Name == s);
-
-				if (classProp != null)
+			
+				foreach (var item in jsonDoc.RootElement.EnumerateObject())
 				{
-					string text = source[s].GetRawText();
-					var t = classProp.PropertyType;
-					var value = JsonSerializer.Deserialize(text, t, options);
+					if (item.Name != "$type")
+					{
+						var classProp = classProps.FirstOrDefault(x => x.Name == item.Name);
+
+						if (classProp != null)
+						{
+							string text = item.Value.GetRawText();
+							var t = classProp.PropertyType;
+							var value = JsonSerializer.Deserialize(text, t, options);
 
 
-					classType.InvokeMember(classProp.Name,
-						BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance,
-						null,
-						newClass,
-						new object[] { value });
+							classType.InvokeMember(classProp.Name,
+								BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance,
+								null,
+								newClass,
+								new object[] { value });
+						}
+
+					}
+
+				}
+				jsonDoc.Dispose();
+
+			}
+			else
+			{
+				var name = reader.GetString();
+
+				var source = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(name, options);
+
+			
+				foreach (var s in source.Keys)
+				{
+					var classProp = classProps.FirstOrDefault(x => x.Name == s);
+
+					if (classProp != null)
+					{
+						string text = source[s].GetRawText();
+						var t = classProp.PropertyType;
+						var value = JsonSerializer.Deserialize(text, t, options);
+
+
+						classType.InvokeMember(classProp.Name,
+							BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance,
+							null,
+							newClass,
+							new object[] { value });
+					}
 				}
 			}
+			
+				
+
+			
 
 			return newClass;
 		}
 
+		
 
 		/// <summary>
 		/// Standard write override except for prop selection
