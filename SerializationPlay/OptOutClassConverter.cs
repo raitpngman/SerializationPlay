@@ -61,7 +61,7 @@ namespace SerializationPlay
 				jsonDoc.Dispose();
 
 			}
-			else
+			else//Normal usage
 			{
 				var name = reader.GetString();
 

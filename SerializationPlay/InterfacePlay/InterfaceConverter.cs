@@ -41,10 +41,10 @@ namespace SerializationPlay.InterfacePlay
             string typeValue = readerClone.GetString();
             var instance = Activator.CreateInstance(Assembly.GetExecutingAssembly().FullName, typeValue).Unwrap();
             var entityType = instance.GetType();
-            //readerClone.Read();
+
             var deserialized = JsonSerializer.Deserialize(ref reader, entityType, options);
             return (T)deserialized;
-           //reader.Read();
+
         }
 
         public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
@@ -61,7 +61,7 @@ namespace SerializationPlay.InterfacePlay
                         writer.WriteString("$type", type.FullName);
                         var stringValue = JsonSerializer.Serialize(value, type, options);
                         var jsonDocument = JsonDocument.Parse(stringValue);
-                        //JsonSerializer.Serialize(writer, value, options);
+                    
                         if (jsonDocument.RootElement.ValueKind == JsonValueKind.String)
                         {
                             //Remove the starting and ending quote marks so it properly 
@@ -73,24 +73,12 @@ namespace SerializationPlay.InterfacePlay
 						}
                         
 						
-                        //stringValue = stringValue.Remove(0, stringValue.IndexOf("{") + 1);
-                        //stringValue = stringValue.Remove(stringValue.LastIndexOf("}"));
-						//stringValue = stringValue.Replace("\\u0022", @"""");
-      //                  var jd2 = JsonDocument.Parse(stringValue);
-
-
-                       // jsonDocument.WriteTo(writer);
-
-                        //var newJsonDoc = JsonDocument.Parse(stringValue);
-                        //writer.WriteStringValue(stringValue);
-                        //writer.WriteString("$class", JsonSerializer.Serialize(value, type, options));
                         foreach (var element in jsonDocument.RootElement.EnumerateObject())
                         {
                             element.WriteTo(writer);
                         }
                         jsonDocument.Dispose();
-                        //writer.WriteStringValue(stringValue);
-                        //writer.WriteRawValue(stringValue);
+                        
 
                         writer.WriteEndObject();
                         break;
