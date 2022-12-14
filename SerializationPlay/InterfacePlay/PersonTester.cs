@@ -11,6 +11,8 @@ namespace SerializationPlay.InterfacePlay
 	internal class PersonTester
 	{
 		public int Id { get; set; }
+		[JsonConverter(typeof(InterfaceConverter<IPerson>))]
+		public IPerson OnePerson {get;set;}
 		List<IPerson> Persons { get; set; }
 		public PersonTester() { }
 
@@ -20,6 +22,7 @@ namespace SerializationPlay.InterfacePlay
 			Persons = new List<IPerson>();
 			Persons.Add(new PersonA("1234", "John", "personA"));
 			Persons.Add(new PersonB("4321", "Jane", "personB"));
+			OnePerson = new PersonA("5678", "Jack", "onePersonA");
 		}
 
 	}

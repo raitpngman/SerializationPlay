@@ -6,12 +6,28 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace SerializationPlay.InterfacePlay
 {
     public class InterfaceConverter<T> : JsonConverter<T>
     where T : class
     {
+        public override bool CanConvert(Type typeToConvert)
+        {
+            //We have to override the CanConvert, because the interface converter
+            //works okay for List<IPerson>, but it doesn't trigger for a singular
+            //IPerson
+            
+            var r = base.CanConvert(typeToConvert);
+			var interfaces = typeToConvert.GetInterfaces().FirstOrDefault(x => x.GetCustomAttribute(typeof(JsonInterfaceConverterAttribute)) != null);
+			if (interfaces != null)
+			{
+                r= true;
+			}
+			return r;
+
+        }
         public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             Utf8JsonReader readerClone = reader;
@@ -37,12 +53,23 @@ namespace SerializationPlay.InterfacePlay
             {
                 throw new JsonException();
             }
+			//We need to remove this converter from the options or it makes
+			//an endless loop.
+			var options2 = new JsonSerializerOptions(options);
+			JsonConverter toRemove = null;
+			foreach (var item in options2.Converters.ToList())
+			{
+				if (item.GetType() == this.GetType())
+				{
+					options2.Converters.Remove(item);
+				}
+			}
 
-            string typeValue = readerClone.GetString();
+			string typeValue = readerClone.GetString();
             var instance = Activator.CreateInstance(Assembly.GetExecutingAssembly().FullName, typeValue).Unwrap();
             var entityType = instance.GetType();
-
-            var deserialized = JsonSerializer.Deserialize(ref reader, entityType, options);
+            //This is where it makes an endless loop if we don't remove "this" converter
+            var deserialized = JsonSerializer.Deserialize(ref reader, entityType, options2);
             return (T)deserialized;
 
         }
@@ -56,10 +83,22 @@ namespace SerializationPlay.InterfacePlay
                     break;
                 default:
                     {
+                        //We need to remove this converter from the options or it makes
+                        //an endless loop.
+                        var options2 = new JsonSerializerOptions(options);
+                        JsonConverter toRemove = null;
+                        foreach (var item in options2.Converters.ToList())
+                        {
+                            if (item.GetType() == this.GetType())
+                            {
+                                options2.Converters.Remove(item);
+                            }
+                        }
                         var type = value.GetType();
                         writer.WriteStartObject();
                         writer.WriteString("$type", type.FullName);
-                        var stringValue = JsonSerializer.Serialize(value, type, options);
+						//This is where it makes an endless loop if we don't remove "this" converter
+						var stringValue = JsonSerializer.Serialize(value, type, options2);
                         var jsonDocument = JsonDocument.Parse(stringValue);
                     
                         if (jsonDocument.RootElement.ValueKind == JsonValueKind.String)

@@ -114,7 +114,7 @@ namespace SerializationPlay
 							 .ToDictionary(x => x.Name, x => GetValue(x,value));
 			
 
-				var ser = JsonSerializer.Serialize(props);
+				var ser = JsonSerializer.Serialize(props, options);
 
 			writer.WriteStringValue(ser);
 		}
